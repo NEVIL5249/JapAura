@@ -42,16 +42,16 @@ Radha Nam Jap counter app to help you track daily malas, counts, and maintain yo
 ## 📸 Screenshots
 
 ### 🏠 Main Counter Screen
-![Home Page](./assets\screenshots\home.jpeg)
+<img src="./assets/screenshots/home.jpeg" alt="Home Page" width="300"/>
 
 ### 🔔 Mala Complete Dialog
-![MalaComplete Page](./assets\screenshots/MalaComplete.jpeg)
+<img src="./assets/screenshots/MalaComplete.jpeg" alt="MalaComplete Page" width="300"/>
 
 ### 📊 Progress History
-![Progress Page](./assets\screenshots/Progress.jpeg)
+<img src="./assets/screenshots/Progress.jpeg" alt="Progress Page" width="300"/>
 
 ### ♻️ Reset Progress Dialog
-![Reset Progress Page](./assets/screenshots/reset.jpeg)
+<img src="./assets/screenshots/reset.jpeg" alt="Reset Progress Page" width="300"/>
 
 ## 🚀 Getting Started
 
