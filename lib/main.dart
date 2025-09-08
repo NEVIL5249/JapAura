@@ -170,7 +170,7 @@ class _NamJapScreenState extends State<NamJapScreen>
     _malaController.forward().then((_) => _malaController.reverse());
 
     // Vibration
-    if (await Vibration.hasVibrator() ?? false) {
+    if (await Vibration.hasVibrator()) {
       Vibration.vibrate(duration: 500);
     }
 
