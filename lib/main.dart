@@ -14,7 +14,7 @@ class NamJapApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: "Radha Nam Jap",
+      title: "JapAura - Daily Jap Companion",
       theme: ThemeData(
         primarySwatch: Colors.orange,
         fontFamily: 'Roboto',

@@ -1,16 +1,15 @@
-name: japaura
-description: "A new Flutter project."
+name: JapAura
+description: "Radha Nam Jap Counter App – JapAura"
 
-# The following line prevents the package from being accidentally published to pub.dev
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+# Prevent accidental publish to pub.dev
+publish_to: 'none'
 
-# Version and build number for your application.
+# Version and build number
 version: 1.0.0+1
 
 environment:
   sdk: ^3.9.0
 
-# Dependencies specify other packages that your package needs in order to work.
 dependencies:
   flutter:
     sdk: flutter
@@ -24,19 +23,20 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1   # Added for app logo
 
-# Flutter-specific settings
 flutter:
   uses-material-design: true
 
   assets:
     - assets/images/radha.png
     - assets/audio/bell.mp3
+    - assets/logo.png
 
-  # To add fonts, uncomment and configure as needed:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
+# Launcher icon configuration
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo.png"   # path to your logo
+  adaptive_icon_background: "#FFA500"  # Orange background
+  adaptive_icon_foreground: "assets/logo.png"
