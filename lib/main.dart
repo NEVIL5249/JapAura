@@ -16,7 +16,7 @@ class NamJapApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: "Radha Nam Jap",
       theme: ThemeData(
-        primarySwatch: Colors.pink,
+        primarySwatch: Colors.orange,
         fontFamily: 'Roboto',
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
@@ -223,7 +223,7 @@ class _NamJapScreenState extends State<NamJapScreen>
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('🎉 Congratulations! 🎉', style: TextStyle(fontSize: 18)),
+              Text('Congratulations!', style: TextStyle(fontSize: 18)),
               SizedBox(height: 8),
               Text(
                 'You have completed $mala mala(s) today!',
@@ -264,9 +264,9 @@ class _NamJapScreenState extends State<NamJapScreen>
           ),
           title: Row(
             children: [
-              Icon(Icons.refresh, color: Colors.red.shade600),
+              Icon(Icons.refresh, color: Colors.orange.shade600),
               SizedBox(width: 8),
-              Text('Reset Today\'s Progress?'),
+              Text('Reset Progress?'),
             ],
           ),
           content: Text(
@@ -292,7 +292,7 @@ class _NamJapScreenState extends State<NamJapScreen>
                 Navigator.of(context).pop();
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.shade600,
+                backgroundColor: Colors.orange.shade600,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -352,7 +352,7 @@ class _NamJapScreenState extends State<NamJapScreen>
                   end: Alignment.bottomRight,
                   colors: [
                     Colors.deepPurple.shade400,
-                    Colors.pink.shade300,
+                    Colors.orange.shade300,
                     Colors.orange.shade400,
                   ],
                 ),
@@ -421,13 +421,14 @@ class _NamJapScreenState extends State<NamJapScreen>
                 ),
               ),
             ),
-
             // Main Content
             Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // Title with professional styling
+                  SizedBox(height: 80), // Adjust height as needed
+
                   AnimatedBuilder(
                     animation: _pulseAnimation,
                     builder: (context, child) {
@@ -442,17 +443,17 @@ class _NamJapScreenState extends State<NamJapScreen>
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            "Radhe Radhe 🙏",
+                            "Radhe Radhe",
                             style: TextStyle(
-                              fontSize: 38,
-                              fontWeight: FontWeight.w600,
+                              fontSize: 36, // slightly smaller
+                              fontWeight: FontWeight.w600, // bold but not heavy
                               color: Colors.white,
-                              letterSpacing: 1.2,
+                              letterSpacing: 1.5, // subtle spacing
                               shadows: [
                                 Shadow(
-                                  blurRadius: 15,
-                                  color: Colors.black.withOpacity(0.3),
-                                  offset: Offset(0, 4),
+                                  blurRadius: 8,
+                                  color: Colors.black.withOpacity(0.2),
+                                  offset: Offset(0, 3),
                                 ),
                               ],
                             ),
@@ -614,7 +615,7 @@ class _NamJapScreenState extends State<NamJapScreen>
         floatingActionButton: (mala > 0 || todayTotalCount > 0)
             ? FloatingActionButton(
                 onPressed: _reset,
-                backgroundColor: Colors.pink.withOpacity(0.9),
+                backgroundColor: Colors.orange.shade300,
                 elevation: 8,
                 child: Icon(Icons.refresh, color: Colors.white, size: 20),
               )
@@ -793,7 +794,7 @@ class ProgressHistorySheet extends StatelessWidget {
                   ),
                   child: Icon(
                     Icons.history,
-                    color: Colors.pink.shade600,
+                    color: Colors.orange.shade300,
                     size: 20,
                   ),
                 ),
@@ -869,7 +870,7 @@ class ProgressHistorySheet extends StatelessWidget {
                           borderRadius: BorderRadius.circular(16),
                           border: isToday
                               ? Border.all(
-                                  color: Colors.pink.shade200,
+                                  color: Colors.orange.shade200,
                                   width: 1.5,
                                 )
                               : null,
@@ -890,8 +891,8 @@ class ProgressHistorySheet extends StatelessWidget {
                                 gradient: LinearGradient(
                                   colors: isToday
                                       ? [
-                                          Colors.pink.shade400,
-                                          Colors.pink.shade600,
+                                          Colors.orange.shade400,
+                                          Colors.orange.shade600,
                                         ]
                                       : [
                                           Colors.grey.shade400,
@@ -901,8 +902,9 @@ class ProgressHistorySheet extends StatelessWidget {
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: (isToday ? Colors.pink : Colors.grey)
-                                        .withOpacity(0.3),
+                                    color:
+                                        (isToday ? Colors.orange : Colors.grey)
+                                            .withOpacity(0.3),
                                     blurRadius: 8,
                                     offset: Offset(0, 2),
                                   ),
@@ -930,7 +932,7 @@ class ProgressHistorySheet extends StatelessWidget {
                                       fontSize: 14,
                                       fontWeight: FontWeight.w400,
                                       color: isToday
-                                          ? Colors.pink.shade400
+                                          ? Colors.orange.shade400
                                           : Colors.grey.shade600,
                                     ),
                                   ),
@@ -949,7 +951,7 @@ class ProgressHistorySheet extends StatelessWidget {
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
                                           color: isToday
-                                              ? Colors.pink.shade700
+                                              ? Colors.orange.shade700
                                               : Colors.grey.shade800,
                                         ),
                                       ),
@@ -966,7 +968,7 @@ class ProgressHistorySheet extends StatelessWidget {
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
                                           color: isToday
-                                              ? Colors.pink.shade700
+                                              ? Colors.orange.shade700
                                               : Colors.grey.shade800,
                                         ),
                                       ),
