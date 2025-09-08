@@ -1,4 +1,4 @@
-🕉️ # JapAura – Your Daily Radha Nam Jap Companion
+# 🕉️ JapAura – Your Daily Radha Nam Jap Companion
 
 Radha Nam Jap counter app to help you track daily malas, counts, and maintain your spiritual streak effortlessly. Built with Flutter, Shared Preferences, and modern UI/UX design principles.
 
@@ -42,10 +42,16 @@ Radha Nam Jap counter app to help you track daily malas, counts, and maintain yo
 ## 📸 Screenshots
 
 ### 🏠 Main Counter Screen
-
-### 📊 Progress History
+![Home Page](./assets\screenshots\home.jpeg)
 
 ### 🔔 Mala Complete Dialog
+![MalaComplete Page](./assets\screenshots/MalaComplete.jpeg)
+
+### 📊 Progress History
+![Progress Page](./assets\screenshots/Progress.jpeg)
+
+### ♻️ Reset Progress Dialog
+![Reset Progress Page](./assets/screenshots/reset.jpeg)
 
 ## 🚀 Getting Started
 
