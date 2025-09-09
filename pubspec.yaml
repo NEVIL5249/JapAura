@@ -30,6 +30,12 @@ flutter:
 
   assets:
     - assets/images/radha.png
+    - assets/images/shiva.png
+    - assets/images/krishna.png
+    - assets/images/ganesha.png
+    - assets/images/hanuman.png
+    - assets/images/gayatri.png
+    - assets/images/ram.png
     - assets/audio/bell.mp3
     - assets/logo.png
 

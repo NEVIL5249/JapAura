@@ -9,6 +9,83 @@ void main() {
   runApp(NamJapApp());
 }
 
+class Mantra {
+  final String id;
+  final String name;
+  final String imagePath;
+  final MaterialColor primaryColor;
+  final MaterialColor secondaryColor;
+
+  const Mantra({
+    required this.id,
+    required this.name,
+    required this.imagePath,
+    required this.primaryColor,
+    required this.secondaryColor,
+  });
+}
+
+class MantraData {
+  static const List<Mantra> mantras = [
+    Mantra(
+      id: 'radhe_radhe',
+      name: 'Radhe Radhe',
+      imagePath: 'assets/images/radha.png',
+      primaryColor: Colors.deepOrange,
+      secondaryColor: Colors.orange,
+    ),
+    Mantra(
+      id: 'om_namah_shivay',
+      name: 'Om Namah Shivay',
+      imagePath: 'assets/images/shiva.png',
+      primaryColor: Colors.blue,
+      secondaryColor: Colors.indigo,
+    ),
+    Mantra(
+      id: 'shree_ram',
+      name: 'Shree Ram Jay Ram Jay Jay Ram',
+      imagePath: 'assets/images/ram.png',
+      primaryColor: Colors.orange,
+      secondaryColor: Colors.deepOrange,
+    ),
+    Mantra(
+      id: 'om_namo_bhagwate',
+      name: 'Om Namo Bhagwate Vasudevay',
+      imagePath: 'assets/images/krishna.png',
+      primaryColor: Colors.deepPurple,
+      secondaryColor: Colors.purple,
+    ),
+    Mantra(
+      id: 'om_gan_ganpate',
+      name: 'Om Gan Ganpate Namo Namah',
+      imagePath: 'assets/images/ganesha.png',
+      primaryColor: Colors.red,
+      secondaryColor: Colors.deepOrange,
+    ),
+    Mantra(
+      id: 'om_hanumante',
+      name: 'Om Hanumante Namah',
+      imagePath: 'assets/images/hanuman.png',
+      primaryColor: Colors.orange,
+      secondaryColor: Colors.red,
+    ),
+    Mantra(
+      id: 'gayatri_mantra',
+      name: 'Gayatri Mantra',
+      imagePath: 'assets/images/gayatri.png',
+      primaryColor: Colors.yellow,
+      secondaryColor: Colors.orange,
+    ),
+  ];
+
+  static Mantra getMantraById(String id) {
+    return mantras.firstWhere(
+      (mantra) => mantra.id == id,
+      orElse: () => mantras[0],
+    );
+  }
+}
+
 class NamJapApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -29,23 +106,27 @@ class DailyProgress {
   final String date;
   final int malas;
   final int totalCount;
+  final String mantraId;
 
   DailyProgress({
     required this.date,
     required this.malas,
     required this.totalCount,
+    required this.mantraId,
   });
 
   Map<String, dynamic> toJson() => {
     'date': date,
     'malas': malas,
     'totalCount': totalCount,
+    'mantraId': mantraId,
   };
 
   factory DailyProgress.fromJson(Map<String, dynamic> json) => DailyProgress(
     date: json['date'],
     malas: json['malas'],
     totalCount: json['totalCount'],
+    mantraId: json['mantraId'] ?? 'radhe_radhe',
   );
 }
 
@@ -67,10 +148,14 @@ class _NamJapScreenState extends State<NamJapScreen>
   late Animation<double> _malaAnimation;
   String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
+  // Current selected mantra
+  Mantra selectedMantra = MantraData.mantras[0];
+
   @override
   void initState() {
     super.initState();
     _initAnimations();
+    _loadSelectedMantra();
     _loadData();
   }
 
@@ -94,30 +179,57 @@ class _NamJapScreenState extends State<NamJapScreen>
     );
   }
 
+  Future<void> _loadSelectedMantra() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedMantraId = prefs.getString('selected_mantra') ?? 'radhe_radhe';
+    setState(() {
+      selectedMantra = MantraData.getMantraById(savedMantraId);
+    });
+  }
+
+  Future<void> _saveSelectedMantra(String mantraId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('selected_mantra', mantraId);
+  }
+
+  String _getMantraKey(String key) {
+    return '${selectedMantra.id}_${key}_$today';
+  }
+
+  String _getMantraHistoryKey(String key, String date) {
+    return '${selectedMantra.id}_${key}_$date';
+  }
+
   Future<void> _loadData() async {
     final prefs = await SharedPreferences.getInstance();
 
     setState(() {
-      count = prefs.getInt('count_$today') ?? 0;
-      mala = prefs.getInt('mala_$today') ?? 0;
-      todayTotalCount = prefs.getInt('total_count_$today') ?? 0;
+      count = prefs.getInt(_getMantraKey('count')) ?? 0;
+      mala = prefs.getInt(_getMantraKey('mala')) ?? 0;
+      todayTotalCount = prefs.getInt(_getMantraKey('total_count')) ?? 0;
     });
 
-    // Load historical data
+    // Load historical data for current mantra
     final keys = prefs
         .getKeys()
-        .where((key) => key.startsWith('mala_'))
+        .where((key) => key.startsWith('${selectedMantra.id}_mala_'))
         .toList();
     List<DailyProgress> progress = [];
 
     for (String key in keys) {
-      String date = key.substring(5); // Remove 'mala_' prefix
-      int malas = prefs.getInt('mala_$date') ?? 0;
-      int totalCount = prefs.getInt('total_count_$date') ?? 0;
+      String date = key.substring('${selectedMantra.id}_mala_'.length);
+      int malas = prefs.getInt('${selectedMantra.id}_mala_$date') ?? 0;
+      int totalCount =
+          prefs.getInt('${selectedMantra.id}_total_count_$date') ?? 0;
 
       if (malas > 0 || totalCount > 0) {
         progress.add(
-          DailyProgress(date: date, malas: malas, totalCount: totalCount),
+          DailyProgress(
+            date: date,
+            malas: malas,
+            totalCount: totalCount,
+            mantraId: selectedMantra.id,
+          ),
         );
       }
     }
@@ -130,9 +242,9 @@ class _NamJapScreenState extends State<NamJapScreen>
 
   Future<void> _saveData() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('count_$today', count);
-    await prefs.setInt('mala_$today', mala);
-    await prefs.setInt('total_count_$today', todayTotalCount);
+    await prefs.setInt(_getMantraKey('count'), count);
+    await prefs.setInt(_getMantraKey('mala'), mala);
+    await prefs.setInt(_getMantraKey('total_count'), todayTotalCount);
   }
 
   void _increment() async {
@@ -157,11 +269,17 @@ class _NamJapScreenState extends State<NamJapScreen>
         date: today,
         malas: mala,
         totalCount: todayTotalCount,
+        mantraId: selectedMantra.id,
       );
     } else {
       dailyProgress.insert(
         0,
-        DailyProgress(date: today, malas: mala, totalCount: todayTotalCount),
+        DailyProgress(
+          date: today,
+          malas: mala,
+          totalCount: todayTotalCount,
+          mantraId: selectedMantra.id,
+        ),
       );
     }
   }
@@ -178,7 +296,6 @@ class _NamJapScreenState extends State<NamJapScreen>
     try {
       await player.play(AssetSource('audio/bell.mp3'));
     } catch (e) {
-      // Handle audio file not found
       print('Audio file not found: $e');
     }
 
@@ -200,12 +317,12 @@ class _NamJapScreenState extends State<NamJapScreen>
               Container(
                 padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.orange.shade100,
+                  color: selectedMantra.primaryColor.shade100,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.celebration,
-                  color: Colors.orange.shade600,
+                  color: selectedMantra.primaryColor.shade600,
                   size: 32,
                 ),
               ),
@@ -213,7 +330,7 @@ class _NamJapScreenState extends State<NamJapScreen>
               Text(
                 'Mala Complete!',
                 style: TextStyle(
-                  color: Colors.orange.shade700,
+                  color: selectedMantra.primaryColor.shade700,
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
@@ -226,7 +343,7 @@ class _NamJapScreenState extends State<NamJapScreen>
               Text('Congratulations!', style: TextStyle(fontSize: 18)),
               SizedBox(height: 8),
               Text(
-                'You have completed $mala mala(s) today!',
+                'You have completed $mala mala(s) of ${selectedMantra.name} today!',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
               ),
@@ -238,7 +355,7 @@ class _NamJapScreenState extends State<NamJapScreen>
               child: ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange.shade600,
+                  backgroundColor: selectedMantra.primaryColor.shade600,
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
@@ -254,6 +371,28 @@ class _NamJapScreenState extends State<NamJapScreen>
     );
   }
 
+  void _showMantraSelection() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      builder: (context) => MantraSelectionSheet(
+        currentMantra: selectedMantra,
+        onMantraSelected: (mantra) async {
+          setState(() {
+            selectedMantra = mantra;
+          });
+          await _saveSelectedMantra(mantra.id);
+          await _loadData(); // Reload data for new mantra
+          Navigator.of(context).pop();
+        },
+      ),
+    );
+  }
+
   void _reset() {
     showDialog(
       context: context,
@@ -264,13 +403,13 @@ class _NamJapScreenState extends State<NamJapScreen>
           ),
           title: Row(
             children: [
-              Icon(Icons.refresh, color: Colors.orange.shade600),
+              Icon(Icons.refresh, color: selectedMantra.primaryColor.shade600),
               SizedBox(width: 8),
               Text('Reset Progress?'),
             ],
           ),
           content: Text(
-            'This will reset today\'s count and mala progress. Are you sure?',
+            'This will reset today\'s count and mala progress for ${selectedMantra.name}. Are you sure?',
             style: TextStyle(color: Colors.grey.shade600),
           ),
           actions: [
@@ -292,7 +431,7 @@ class _NamJapScreenState extends State<NamJapScreen>
                 Navigator.of(context).pop();
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange.shade600,
+                backgroundColor: selectedMantra.primaryColor.shade600,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -322,6 +461,7 @@ class _NamJapScreenState extends State<NamJapScreen>
         builder: (context, scrollController) => ProgressHistorySheet(
           dailyProgress: dailyProgress,
           scrollController: scrollController,
+          mantra: selectedMantra,
         ),
       ),
     );
@@ -351,14 +491,14 @@ class _NamJapScreenState extends State<NamJapScreen>
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Colors.deepPurple.shade400,
-                    Colors.orange.shade300,
-                    Colors.orange.shade400,
+                    selectedMantra.primaryColor.shade400,
+                    selectedMantra.secondaryColor.shade300,
+                    selectedMantra.secondaryColor.shade400,
                   ],
                 ),
               ),
               child: Image.asset(
-                "assets/images/radha.png",
+                selectedMantra.imagePath,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container();
@@ -400,22 +540,42 @@ class _NamJapScreenState extends State<NamJapScreen>
                     _buildStatCard(
                       'Streak',
                       '${_calculateStreak()}',
-                      Colors.orange.shade300,
+                      selectedMantra.secondaryColor.shade300,
                     ),
-                    GestureDetector(
-                      onTap: _showProgressHistory,
-                      child: Container(
-                        padding: EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(15),
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: _showMantraSelection,
+                          child: Container(
+                            padding: EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: Icon(
+                              Icons.format_list_bulleted,
+                              color: Colors.white,
+                              size: 22,
+                            ),
+                          ),
                         ),
-                        child: Icon(
-                          Icons.history,
-                          color: Colors.white,
-                          size: 22,
+                        SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: _showProgressHistory,
+                          child: Container(
+                            padding: EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: Icon(
+                              Icons.history,
+                              color: Colors.white,
+                              size: 22,
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ],
                 ),
@@ -427,7 +587,7 @@ class _NamJapScreenState extends State<NamJapScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // Title with professional styling
-                  SizedBox(height: 80), // Adjust height as needed
+                  SizedBox(height: 80),
 
                   AnimatedBuilder(
                     animation: _pulseAnimation,
@@ -443,12 +603,14 @@ class _NamJapScreenState extends State<NamJapScreen>
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            "Radhe Radhe",
+                            selectedMantra.name,
                             style: TextStyle(
-                              fontSize: 36, // slightly smaller
-                              fontWeight: FontWeight.w600, // bold but not heavy
+                              fontSize: selectedMantra.name.length > 20
+                                  ? 28
+                                  : 36,
+                              fontWeight: FontWeight.w600,
                               color: Colors.white,
-                              letterSpacing: 1.5, // subtle spacing
+                              letterSpacing: 1.5,
                               shadows: [
                                 Shadow(
                                   blurRadius: 8,
@@ -457,6 +619,7 @@ class _NamJapScreenState extends State<NamJapScreen>
                                 ),
                               ],
                             ),
+                            textAlign: TextAlign.center,
                           ),
                         ),
                       );
@@ -479,7 +642,8 @@ class _NamJapScreenState extends State<NamJapScreen>
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.orange.withOpacity(0.3),
+                                color: selectedMantra.secondaryColor
+                                    .withOpacity(0.3),
                                 blurRadius: 20,
                                 spreadRadius: 5,
                               ),
@@ -505,7 +669,8 @@ class _NamJapScreenState extends State<NamJapScreen>
                           painter: CircularProgressPainter(
                             progress: progress,
                             strokeWidth: 8,
-                            progressColor: Colors.orange.shade300,
+                            progressColor:
+                                selectedMantra.secondaryColor.shade300,
                             backgroundColor: Colors.white.withOpacity(0.1),
                           ),
                         ),
@@ -570,7 +735,7 @@ class _NamJapScreenState extends State<NamJapScreen>
                               style: TextStyle(
                                 fontSize: 42,
                                 fontWeight: FontWeight.w700,
-                                color: Colors.orange.shade300,
+                                color: selectedMantra.secondaryColor.shade300,
                                 shadows: [
                                   Shadow(
                                     blurRadius: 8,
@@ -615,7 +780,7 @@ class _NamJapScreenState extends State<NamJapScreen>
         floatingActionButton: (mala > 0 || todayTotalCount > 0)
             ? FloatingActionButton(
                 onPressed: _reset,
-                backgroundColor: Colors.orange.shade300,
+                backgroundColor: selectedMantra.secondaryColor.shade300,
                 elevation: 8,
                 child: Icon(Icons.refresh, color: Colors.white, size: 20),
               )
@@ -672,6 +837,221 @@ class _NamJapScreenState extends State<NamJapScreen>
     }
 
     return streak;
+  }
+}
+
+// Mantra Selection Sheet
+class MantraSelectionSheet extends StatelessWidget {
+  final Mantra currentMantra;
+  final Function(Mantra) onMantraSelected;
+
+  const MantraSelectionSheet({
+    Key? key,
+    required this.currentMantra,
+    required this.onMantraSelected,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.8,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: Offset(0, -5),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Handle bar
+          Container(
+            width: 40,
+            height: 4,
+            margin: EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+
+          Padding(
+            padding: EdgeInsets.fromLTRB(24, 8, 24, 20),
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: currentMantra.primaryColor.shade50,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.format_list_bulleted,
+                    color: currentMantra.primaryColor.shade600,
+                    size: 20,
+                  ),
+                ),
+                SizedBox(width: 12),
+                Text(
+                  'Select Mantra',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          Expanded(
+            child: ListView.builder(
+              padding: EdgeInsets.symmetric(horizontal: 24),
+              itemCount: MantraData.mantras.length,
+              itemBuilder: (context, index) {
+                final mantra = MantraData.mantras[index];
+                final isSelected = mantra.id == currentMantra.id;
+
+                return Container(
+                  margin: EdgeInsets.only(bottom: 16),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => onMantraSelected(mantra),
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        padding: EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? mantra.primaryColor.shade50
+                              : Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(16),
+                          border: isSelected
+                              ? Border.all(
+                                  color: mantra.primaryColor.shade200,
+                                  width: 2,
+                                )
+                              : Border.all(
+                                  color: Colors.grey.shade200,
+                                  width: 1,
+                                ),
+                          boxShadow: isSelected
+                              ? [
+                                  BoxShadow(
+                                    color: mantra.primaryColor.withOpacity(0.1),
+                                    blurRadius: 10,
+                                    offset: Offset(0, 4),
+                                  ),
+                                ]
+                              : [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 5,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 60,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    mantra.primaryColor.shade400,
+                                    mantra.secondaryColor.shade400,
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(15),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: mantra.primaryColor.withOpacity(0.3),
+                                    blurRadius: 8,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(15),
+                                child: Image.asset(
+                                  mantra.imagePath,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      color: mantra.primaryColor.shade100,
+                                      child: Icon(
+                                        Icons.image,
+                                        color: mantra.primaryColor.shade400,
+                                        size: 30,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    mantra.name,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: isSelected
+                                          ? mantra.primaryColor.shade700
+                                          : Colors.grey.shade800,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    isSelected
+                                        ? 'Currently Selected'
+                                        : 'Tap to select',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: isSelected
+                                          ? mantra.primaryColor.shade500
+                                          : Colors.grey.shade600,
+                                      fontWeight: isSelected
+                                          ? FontWeight.w500
+                                          : FontWeight.w400,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (isSelected)
+                              Container(
+                                padding: EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: mantra.primaryColor.shade600,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.check,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -748,11 +1128,13 @@ class CircularProgressPainter extends CustomPainter {
 class ProgressHistorySheet extends StatelessWidget {
   final List<DailyProgress> dailyProgress;
   final ScrollController scrollController;
+  final Mantra mantra;
 
   const ProgressHistorySheet({
     Key? key,
     required this.dailyProgress,
     required this.scrollController,
+    required this.mantra,
   }) : super(key: key);
 
   @override
@@ -789,22 +1171,37 @@ class ProgressHistorySheet extends StatelessWidget {
                 Container(
                   padding: EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.pink.shade50,
+                    color: mantra.primaryColor.shade50,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
                     Icons.history,
-                    color: Colors.orange.shade300,
+                    color: mantra.primaryColor.shade600,
                     size: 20,
                   ),
                 ),
                 SizedBox(width: 12),
-                Text(
-                  'Progress History',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade800,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Progress History',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade800,
+                        ),
+                      ),
+                      Text(
+                        mantra.name,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: mantra.primaryColor.shade600,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -840,11 +1237,12 @@ class ProgressHistorySheet extends StatelessWidget {
                         ),
                         SizedBox(height: 8),
                         Text(
-                          'Start your jap journey today!',
+                          'Start your ${mantra.name} jap today!',
                           style: TextStyle(
                             fontSize: 16,
                             color: Colors.grey.shade500,
                           ),
+                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
@@ -865,12 +1263,12 @@ class ProgressHistorySheet extends StatelessWidget {
                         padding: EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           color: isToday
-                              ? Colors.pink.shade50
+                              ? mantra.primaryColor.shade50
                               : Colors.grey.shade50,
                           borderRadius: BorderRadius.circular(16),
                           border: isToday
                               ? Border.all(
-                                  color: Colors.orange.shade200,
+                                  color: mantra.primaryColor.shade200,
                                   width: 1.5,
                                 )
                               : null,
@@ -891,8 +1289,8 @@ class ProgressHistorySheet extends StatelessWidget {
                                 gradient: LinearGradient(
                                   colors: isToday
                                       ? [
-                                          Colors.orange.shade400,
-                                          Colors.orange.shade600,
+                                          mantra.primaryColor.shade400,
+                                          mantra.secondaryColor.shade400,
                                         ]
                                       : [
                                           Colors.grey.shade400,
@@ -903,7 +1301,9 @@ class ProgressHistorySheet extends StatelessWidget {
                                 boxShadow: [
                                   BoxShadow(
                                     color:
-                                        (isToday ? Colors.orange : Colors.grey)
+                                        (isToday
+                                                ? mantra.primaryColor
+                                                : Colors.grey)
                                             .withOpacity(0.3),
                                     blurRadius: 8,
                                     offset: Offset(0, 2),
@@ -932,7 +1332,7 @@ class ProgressHistorySheet extends StatelessWidget {
                                       fontSize: 14,
                                       fontWeight: FontWeight.w400,
                                       color: isToday
-                                          ? Colors.orange.shade400
+                                          ? mantra.primaryColor.shade600
                                           : Colors.grey.shade600,
                                     ),
                                   ),
@@ -951,7 +1351,7 @@ class ProgressHistorySheet extends StatelessWidget {
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
                                           color: isToday
-                                              ? Colors.orange.shade700
+                                              ? mantra.primaryColor.shade700
                                               : Colors.grey.shade800,
                                         ),
                                       ),
@@ -968,7 +1368,7 @@ class ProgressHistorySheet extends StatelessWidget {
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
                                           color: isToday
-                                              ? Colors.orange.shade700
+                                              ? mantra.primaryColor.shade700
                                               : Colors.grey.shade800,
                                         ),
                                       ),
