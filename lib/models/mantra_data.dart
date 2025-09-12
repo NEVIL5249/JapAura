@@ -9,6 +9,7 @@ class MantraData {
       imagePath: 'assets/images/radha.png',
       primaryColor: Colors.deepOrange,
       secondaryColor: Colors.orange,
+      audioPath: 'audio/radhe.mp3',
     ),
     Mantra(
       id: 'om_namah_shivay',
@@ -16,6 +17,7 @@ class MantraData {
       imagePath: 'assets/images/shiva.png',
       primaryColor: Colors.blue,
       secondaryColor: Colors.indigo,
+      audioPath: 'audio/radhe.mp3',
     ),
     Mantra(
       id: 'shree_ram',
@@ -23,6 +25,7 @@ class MantraData {
       imagePath: 'assets/images/ram.png',
       primaryColor: Colors.orange,
       secondaryColor: Colors.deepOrange,
+      audioPath: 'audio/radhe.mp3',
     ),
     Mantra(
       id: 'om_namo_bhagwate',
@@ -30,6 +33,7 @@ class MantraData {
       imagePath: 'assets/images/krishna.png',
       primaryColor: Colors.deepPurple,
       secondaryColor: Colors.purple,
+      audioPath: 'audio/radhe.mp3',
     ),
     Mantra(
       id: 'om_gan_ganpate',
@@ -37,6 +41,7 @@ class MantraData {
       imagePath: 'assets/images/ganesha.png',
       primaryColor: Colors.red,
       secondaryColor: Colors.deepOrange,
+      audioPath: 'audio/radhe.mp3',
     ),
     Mantra(
       id: 'om_hanumante',
@@ -44,6 +49,7 @@ class MantraData {
       imagePath: 'assets/images/hanuman.png',
       primaryColor: Colors.orange,
       secondaryColor: Colors.red,
+      audioPath: 'audio/radhe.mp3',
     ),
     Mantra(
       id: 'gayatri_mantra',
@@ -51,6 +57,7 @@ class MantraData {
       imagePath: 'assets/images/gayatri.png',
       primaryColor: Colors.yellow,
       secondaryColor: Colors.orange,
+      audioPath: 'audio/radhe.mp3',
     ),
   ];
 

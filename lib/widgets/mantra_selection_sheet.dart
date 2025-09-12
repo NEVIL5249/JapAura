@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/mantra.dart';
 import '../models/mantra_data.dart';
+import '../services/audio_service.dart';
 
 class MantraSelectionSheet extends StatelessWidget {
   final Mantra currentMantra;
@@ -79,7 +80,11 @@ class MantraSelectionSheet extends StatelessWidget {
                 final mantra = MantraData.mantras[index];
                 final isSelected = mantra.id == currentMantra.id;
 
-                return _buildMantraTile(mantra, isSelected);
+                return _buildMantraTile(
+                  context,
+                  mantra,
+                  isSelected,
+                ); // pass context
               },
             ),
           ),
@@ -88,13 +93,29 @@ class MantraSelectionSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildMantraTile(Mantra mantra, bool isSelected) {
+  Widget _buildMantraTile(
+    BuildContext context,
+    Mantra mantra,
+    bool isSelected,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => onMantraSelected(mantra),
+          onTap: () async {
+            // Update selected mantra in parent
+            onMantraSelected(mantra);
+
+            // Play mantra audio
+            if (AudioService.isPlaying) {
+              await AudioService.stop();
+            }
+            await AudioService.playLoop(mantra.audioPath);
+
+            // Close modal safely
+            // Navigator.pop(context);
+          },
           borderRadius: BorderRadius.circular(16),
           child: Container(
             padding: const EdgeInsets.all(20),

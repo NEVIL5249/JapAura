@@ -10,6 +10,8 @@ import '../models/daily_progress.dart';
 import '../widgets/mantra_selection_sheet.dart';
 import '../widgets/progress_history_sheet.dart';
 import '../widgets/circular_progress_painter.dart';
+import '../services/audio_service.dart';
+import 'settings_screen.dart';
 
 class NamJapScreen extends StatefulWidget {
   const NamJapScreen({super.key});
@@ -34,12 +36,17 @@ class _NamJapScreenState extends State<NamJapScreen>
   // Current selected mantra
   Mantra selectedMantra = MantraData.mantras[0];
 
+  // Settings
+  bool _isAudioEnabled = true;
+  bool _isVibrationEnabled = true;
+
   @override
   void initState() {
     super.initState();
     _initAnimations();
     _loadSelectedMantra();
     _loadData();
+    _loadSettings();
   }
 
   void _initAnimations() {
@@ -62,6 +69,17 @@ class _NamJapScreenState extends State<NamJapScreen>
     );
   }
 
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isAudioEnabled = prefs.getBool('audio_enabled') ?? true;
+      _isVibrationEnabled = prefs.getBool('vibration_enabled') ?? true;
+    });
+
+    // Sync AudioService with settings
+    AudioService.setAudioEnabled(_isAudioEnabled);
+  }
+
   Future<void> _loadSelectedMantra() async {
     final prefs = await SharedPreferences.getInstance();
     final savedMantraId = prefs.getString('selected_mantra') ?? 'radhe_radhe';
@@ -76,8 +94,6 @@ class _NamJapScreenState extends State<NamJapScreen>
   }
 
   String _getMantraKey(String key) => '${selectedMantra.id}_${key}_$today';
-  String _getMantraHistoryKey(String key, String date) =>
-      '${selectedMantra.id}_${key}_$date';
 
   Future<void> _loadData() async {
     final prefs = await SharedPreferences.getInstance();
@@ -87,7 +103,6 @@ class _NamJapScreenState extends State<NamJapScreen>
       todayTotalCount = prefs.getInt(_getMantraKey('total_count')) ?? 0;
     });
 
-    // Load historical data
     final keys = prefs
         .getKeys()
         .where((key) => key.startsWith('${selectedMantra.id}_mala_'))
@@ -138,7 +153,6 @@ class _NamJapScreenState extends State<NamJapScreen>
 
     await _saveData();
 
-    // Update daily progress list
     int existingIndex = dailyProgress.indexWhere((p) => p.date == today);
     if (existingIndex != -1) {
       dailyProgress[existingIndex] = DailyProgress(
@@ -158,19 +172,34 @@ class _NamJapScreenState extends State<NamJapScreen>
         ),
       );
     }
+
+    if (_isAudioEnabled && selectedMantra.audioPath.isNotEmpty) {
+      try {
+        await player.stop();
+        await player.play(AssetSource(selectedMantra.audioPath));
+      } catch (e) {
+        debugPrint('Mantra audio error: $e');
+      }
+    }
+
+    if (_isVibrationEnabled && await Vibration.hasVibrator()) {
+      Vibration.vibrate(duration: 50);
+    }
   }
 
   void _notifyMalaComplete() async {
     _malaController.forward().then((_) => _malaController.reverse());
 
-    if (await Vibration.hasVibrator()) {
+    if (_isVibrationEnabled && await Vibration.hasVibrator()) {
       Vibration.vibrate(duration: 500);
     }
 
-    try {
-      await player.play(AssetSource('audio/bell.mp3'));
-    } catch (e) {
-      debugPrint('Audio file not found: $e');
+    if (_isAudioEnabled) {
+      try {
+        await player.play(AssetSource('audio/bell.mp3'));
+      } catch (e) {
+        debugPrint('Bell audio error: $e');
+      }
     }
 
     _showMalaCompleteDialog();
@@ -254,7 +283,15 @@ class _NamJapScreenState extends State<NamJapScreen>
           setState(() => selectedMantra = mantra);
           await _saveSelectedMantra(mantra.id);
           await _loadData();
-          Navigator.of(context).pop();
+
+          // Use AudioService instead of player
+          if (_isAudioEnabled && mantra.audioPath.isNotEmpty) {
+            await AudioService.playLoop(mantra.audioPath);
+          } else {
+            await AudioService.stop();
+          }
+
+          Navigator.pop(context);
         },
       ),
     );
@@ -330,10 +367,18 @@ class _NamJapScreenState extends State<NamJapScreen>
     );
   }
 
+  void _openSettings() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SettingsScreen()),
+    ).then((_) => _loadSettings());
+  }
+
   @override
   void dispose() {
     _pulseController.dispose();
     _malaController.dispose();
+    player.dispose();
     super.dispose();
   }
 
@@ -364,8 +409,6 @@ class _NamJapScreenState extends State<NamJapScreen>
       ),
     );
   }
-
-  // 🔹 UI Helpers
 
   Widget _buildBackground() => Container(
     decoration: BoxDecoration(
@@ -428,6 +471,8 @@ class _NamJapScreenState extends State<NamJapScreen>
               ),
               const SizedBox(width: 8),
               _buildIconButton(Icons.history, _showProgressHistory),
+              const SizedBox(width: 8),
+              _buildIconButton(Icons.settings, _openSettings),
             ],
           ),
         ],
@@ -475,7 +520,7 @@ class _NamJapScreenState extends State<NamJapScreen>
     ),
   );
 
-  Widget _buildProgressCircle(double progress) => Container(
+  Widget _buildProgressCircle(double progress) => SizedBox(
     width: 240,
     height: 240,
     child: Stack(
@@ -638,7 +683,6 @@ class _NamJapScreenState extends State<NamJapScreen>
 
   int _calculateStreak() {
     if (dailyProgress.isEmpty) return 0;
-
     int streak = 0;
     DateTime currentDate = DateTime.now();
 
@@ -657,7 +701,6 @@ class _NamJapScreenState extends State<NamJapScreen>
         break;
       }
     }
-
     return streak;
   }
 }

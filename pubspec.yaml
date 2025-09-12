@@ -37,6 +37,7 @@ flutter:
     - assets/images/gayatri.png
     - assets/images/ram.png
     - assets/audio/bell.mp3
+    - assets/audio/radhe.mp3
     - assets/logo.png
 
 # Launcher icon configuration
