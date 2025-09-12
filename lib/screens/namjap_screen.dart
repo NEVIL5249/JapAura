@@ -39,6 +39,7 @@ class _NamJapScreenState extends State<NamJapScreen>
   // Settings
   bool _isAudioEnabled = true;
   bool _isVibrationEnabled = true;
+  int _malaSize = 108; // new state variable
 
   @override
   void initState() {
@@ -74,6 +75,7 @@ class _NamJapScreenState extends State<NamJapScreen>
     setState(() {
       _isAudioEnabled = prefs.getBool('audio_enabled') ?? true;
       _isVibrationEnabled = prefs.getBool('vibration_enabled') ?? true;
+      _malaSize = prefs.getInt('mala_size') ?? 108; // Load custom mala size
     });
 
     // Sync AudioService with settings
@@ -144,7 +146,8 @@ class _NamJapScreenState extends State<NamJapScreen>
     setState(() {
       count++;
       todayTotalCount++;
-      if (count >= 108) {
+      if (count >= _malaSize) {
+        // Use custom mala size
         mala++;
         count = 0;
         _notifyMalaComplete();
@@ -249,7 +252,7 @@ class _NamJapScreenState extends State<NamJapScreen>
           ],
         ),
         actions: [
-          Container(
+          SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -384,7 +387,7 @@ class _NamJapScreenState extends State<NamJapScreen>
 
   @override
   Widget build(BuildContext context) {
-    double progress = count / 108;
+    double progress = count / _malaSize; // Use custom mala size
 
     return GestureDetector(
       onTap: _increment,
@@ -577,7 +580,7 @@ class _NamJapScreenState extends State<NamJapScreen>
                 ),
               ),
               Text(
-                "/ 108",
+                "/ $_malaSize", // Dynamically show selected mala size
                 style: TextStyle(
                   fontSize: 18,
                   color: Colors.white.withOpacity(0.8),

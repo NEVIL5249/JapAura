@@ -11,6 +11,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _isAudioEnabled = true;
   bool _isVibrationEnabled = true;
+  int _malaSize = 108; // New state variable for mala size
 
   @override
   void initState() {
@@ -23,6 +24,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       _isAudioEnabled = prefs.getBool('audio_enabled') ?? true;
       _isVibrationEnabled = prefs.getBool('vibration_enabled') ?? true;
+      _malaSize = prefs.getInt('mala_size') ?? 108; // Load custom mala size
     });
   }
 
@@ -30,6 +32,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('audio_enabled', _isAudioEnabled);
     await prefs.setBool('vibration_enabled', _isVibrationEnabled);
+    await prefs.setInt('mala_size', _malaSize); // Save custom mala size
   }
 
   @override
@@ -73,6 +76,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _saveSettings();
             },
           ),
+          const SizedBox(height: 16),
+          _buildMalaSizeTile(), // New custom mala size tile
           const SizedBox(height: 40),
           Text(
             'About',
@@ -142,6 +147,59 @@ class _SettingsScreenState extends State<SettingsScreen> {
         inactiveThumbColor: Colors.grey[500],
         inactiveTrackColor: Colors.grey[700],
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      ),
+    );
+  }
+
+  Widget _buildMalaSizeTile() {
+    const List<int> malaOptions = [27, 54, 108, 216];
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[850],
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.6),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        children: [
+          Icon(Icons.countertops, color: Colors.white70),
+          const SizedBox(width: 16),
+          Expanded(
+            child: DropdownButtonFormField<int>(
+              value: _malaSize,
+              dropdownColor: Colors.grey[850],
+              decoration: const InputDecoration(
+                labelText: 'Mala Size',
+                labelStyle: TextStyle(color: Colors.white),
+                border: InputBorder.none,
+              ),
+              style: const TextStyle(color: Colors.white),
+              items: malaOptions
+                  .map(
+                    (size) => DropdownMenuItem(
+                      value: size,
+                      child: Text(
+                        '$size Beads',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() => _malaSize = value);
+                  _saveSettings();
+                }
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
