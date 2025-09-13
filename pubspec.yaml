@@ -24,6 +24,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^5.0.0
   flutter_launcher_icons: ^0.13.1   # Added for app logo
+  flutter_native_splash: ^2.3.2
 
 flutter:
   uses-material-design: true
@@ -36,6 +37,7 @@ flutter:
     - assets/images/hanuman.png
     - assets/images/gayatri.png
     - assets/images/ram.png
+    - assets/images/japaura_logo.png
     - assets/audio/bell.mp3
     - assets/audio/radhe.mp3
     - assets/logo.png
@@ -47,3 +49,9 @@ flutter_launcher_icons:
   image_path: "assets/logo.png"   # path to your logo
   adaptive_icon_background: "#FFA500"  # Orange background
   adaptive_icon_foreground: "assets/logo.png"
+
+flutter_native_splash:
+  color: "#FF5C1D"   # your app’s primary color
+  image: assets/images/japaura_logo.png   # your app logo
+  android: true
+  ios: true
