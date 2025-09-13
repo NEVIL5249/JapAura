@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/notification_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -11,6 +12,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _isAudioEnabled = true;
   bool _isVibrationEnabled = true;
+  bool _isNotificationEnabled = true;
   int _malaSize = 108;
 
   // Theme colors to match NamJapScreen
@@ -29,6 +31,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _isAudioEnabled = prefs.getBool('audio_enabled') ?? true;
       _isVibrationEnabled = prefs.getBool('vibration_enabled') ?? true;
       _malaSize = prefs.getInt('mala_size') ?? 108;
+      _isNotificationEnabled = prefs.getBool('notification_enabled') ?? true;
     });
   }
 
@@ -37,6 +40,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await prefs.setBool('audio_enabled', _isAudioEnabled);
     await prefs.setBool('vibration_enabled', _isVibrationEnabled);
     await prefs.setInt('mala_size', _malaSize);
+    await prefs.setBool('notification_enabled', _isNotificationEnabled);
+
+    // Schedule or cancel notifications
+    try {
+      await NotificationService.scheduleDailyNotifications(
+        enabled: _isNotificationEnabled,
+      );
+      // 👇 Removed SnackBars so UI stays clean
+    } catch (e) {
+      debugPrint('Error managing notifications: $e');
+    }
   }
 
   @override
@@ -117,6 +131,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
+                  _buildSettingsTile(
+                    icon: Icons.notifications,
+                    title: 'Enable Notifications',
+                    subtitle:
+                        'Get gentle reminders to chant at the right times.',
+                    value: _isNotificationEnabled,
+                    onChanged: (val) {
+                      setState(() => _isNotificationEnabled = val);
+                      _saveSettings();
+                    },
+                  ),
+                  const SizedBox(height: 16),
                   _buildMalaSizeTile(),
                   const SizedBox(height: 40),
                   _buildSectionTitle('About'),
@@ -133,7 +159,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     title: 'Privacy Policy',
                     subtitle: 'How we protect your data',
                     onTap: () {
-                      // Handle privacy tap
                       _showComingSoonDialog('Privacy Policy');
                     },
                   ),
@@ -143,7 +168,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     title: 'Send Feedback',
                     subtitle: 'Help us improve the app',
                     onTap: () {
-                      // Handle feedback tap
                       _showComingSoonDialog('Feedback');
                     },
                   ),
