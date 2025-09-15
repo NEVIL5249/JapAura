@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/daily_progress.dart';
 import '../models/mantra.dart';
+import '../screens/stats_screen.dart';
 
 class ProgressHistorySheet extends StatelessWidget {
   final List<DailyProgress> dailyProgress;
@@ -32,7 +33,7 @@ class ProgressHistorySheet extends StatelessWidget {
       child: Column(
         children: [
           _buildHandleBar(),
-          _buildHeader(),
+          _buildHeader(context),
           Expanded(
             child: dailyProgress.isEmpty
                 ? _buildEmptyState()
@@ -57,7 +58,7 @@ class ProgressHistorySheet extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
       child: Row(
@@ -98,7 +99,58 @@ class ProgressHistorySheet extends StatelessWidget {
               ],
             ),
           ),
+          // Stats Button
+          GestureDetector(
+            onTap: () => _navigateToStats(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    mantra.primaryColor.shade500,
+                    mantra.secondaryColor.shade500,
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: mantra.primaryColor.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.analytics_outlined,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'Stats',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  void _navigateToStats(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) =>
+            StatsScreen(dailyProgress: dailyProgress, mantra: mantra),
       ),
     );
   }
