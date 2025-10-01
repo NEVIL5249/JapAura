@@ -44,6 +44,12 @@ flutter:
     - assets/images/japaura_logo.png
     - assets/audio/bell.mp3
     - assets/audio/radhe.mp3
+    - assets/audio/shivay.mp3
+    - assets/audio/ram.mp3
+    - assets/audio/vasudevay.mp3
+    - assets/audio/ganpatibappa.mp3
+    - assets/audio/hanuman.mp3
+    - assets/audio/gayatri.mp3
     - assets/logo.png
 
 # Launcher icon configuration
