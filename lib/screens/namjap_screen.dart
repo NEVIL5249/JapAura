@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:vibration/vibration.dart';
 import 'package:intl/intl.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 import '../models/mantra.dart';
 import '../models/mantra_data.dart';
@@ -10,11 +11,20 @@ import '../models/daily_progress.dart';
 import '../widgets/mantra_selection_sheet.dart';
 import '../widgets/progress_history_sheet.dart';
 import '../widgets/circular_progress_painter.dart';
+import '../widgets/app_tour/tour_keys.dart';
+import '../widgets/app_tour/tour_tooltip.dart';
 import '../services/audio_service.dart';
+import '../services/onboarding_service.dart';
 import 'settings_screen.dart';
+import 'onboarding/completion_screen.dart';
 
 class NamJapScreen extends StatefulWidget {
-  const NamJapScreen({super.key});
+  final bool startTourOnLaunch;
+
+  const NamJapScreen({
+    super.key,
+    this.startTourOnLaunch = false,
+  });
 
   @override
   _NamJapScreenState createState() => _NamJapScreenState();
@@ -39,7 +49,7 @@ class _NamJapScreenState extends State<NamJapScreen>
   // Settings
   bool _isAudioEnabled = true;
   bool _isVibrationEnabled = true;
-  int _malaSize = 108; // new state variable
+  int _malaSize = 108;
 
   @override
   void initState() {
@@ -48,6 +58,12 @@ class _NamJapScreenState extends State<NamJapScreen>
     _loadSelectedMantra();
     _loadData();
     _loadSettings();
+
+    if (widget.startTourOnLaunch) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ShowCaseWidget.of(context).startShowCase(TourKeys.allKeys);
+      });
+    }
   }
 
   void _initAnimations() {
@@ -75,10 +91,9 @@ class _NamJapScreenState extends State<NamJapScreen>
     setState(() {
       _isAudioEnabled = prefs.getBool('audio_enabled') ?? true;
       _isVibrationEnabled = prefs.getBool('vibration_enabled') ?? true;
-      _malaSize = prefs.getInt('mala_size') ?? 108; // Load custom mala size
+      _malaSize = prefs.getInt('mala_size') ?? 108;
     });
 
-    // Sync AudioService with settings
     AudioService.setAudioEnabled(_isAudioEnabled);
   }
 
@@ -147,7 +162,6 @@ class _NamJapScreenState extends State<NamJapScreen>
       count++;
       todayTotalCount++;
       if (count >= _malaSize) {
-        // Use custom mala size
         mala++;
         count = 0;
         _notifyMalaComplete();
@@ -287,7 +301,6 @@ class _NamJapScreenState extends State<NamJapScreen>
           await _saveSelectedMantra(mantra.id);
           await _loadData();
 
-          // Use AudioService instead of player
           if (_isAudioEnabled && mantra.audioPath.isNotEmpty) {
             await AudioService.playLoop(mantra.audioPath);
           } else {
@@ -374,7 +387,19 @@ class _NamJapScreenState extends State<NamJapScreen>
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const SettingsScreen()),
-    ).then((_) => _loadSettings());
+    ).then((shouldReplayTour) {
+      _loadSettings();
+      if (shouldReplayTour == true) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ShowCaseWidget.of(context).startShowCase(TourKeys.allKeys);
+        });
+      }
+    });
+  }
+
+  void _dismissTour(BuildContext context) async {
+    ShowCaseWidget.of(context).dismiss();
+    await OnboardingService.completeOnboarding();
   }
 
   @override
@@ -387,7 +412,7 @@ class _NamJapScreenState extends State<NamJapScreen>
 
   @override
   Widget build(BuildContext context) {
-    double progress = count / _malaSize; // Use custom mala size
+    double progress = count / _malaSize;
 
     return GestureDetector(
       onTap: _increment,
@@ -468,14 +493,72 @@ class _NamJapScreenState extends State<NamJapScreen>
           ),
           Row(
             children: [
-              _buildIconButton(
-                Icons.format_list_bulleted,
-                _showMantraSelection,
+              // Target 3: Mantra Selection
+              Showcase.withWidget(
+                key: TourKeys.mantraSelectorKey,
+                targetShapeBorder: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                targetPadding: const EdgeInsets.all(4),
+                container: TourTooltip(
+                  stepIndex: 2,
+                  totalSteps: 5,
+                  title: 'Choose Your Mantra',
+                  description: 'Explore different mantras whenever you wish.',
+                  arrowDirection: ArrowDirection.topRight,
+                  onNext: () => ShowCaseWidget.of(context).next(),
+                  onSkip: () => _dismissTour(context),
+                ),
+                child: _buildIconButton(
+                  Icons.format_list_bulleted,
+                  _showMantraSelection,
+                ),
               ),
               const SizedBox(width: 8),
-              _buildIconButton(Icons.history, _showProgressHistory),
+
+              // Target 4: Progress History
+              Showcase.withWidget(
+                key: TourKeys.historyKey,
+                targetShapeBorder: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                targetPadding: const EdgeInsets.all(4),
+                container: TourTooltip(
+                  stepIndex: 3,
+                  totalSteps: 5,
+                  title: 'Follow Your Journey',
+                  description: 'Review your practice and progress over time.',
+                  arrowDirection: ArrowDirection.topRight,
+                  onNext: () => ShowCaseWidget.of(context).next(),
+                  onSkip: () => _dismissTour(context),
+                ),
+                child: _buildIconButton(Icons.history, _showProgressHistory),
+              ),
               const SizedBox(width: 8),
-              _buildIconButton(Icons.settings, _openSettings),
+
+              // Target 5: Settings
+              Showcase.withWidget(
+                key: TourKeys.settingsKey,
+                targetShapeBorder: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                targetPadding: const EdgeInsets.all(4),
+                container: TourTooltip(
+                  stepIndex: 4,
+                  totalSteps: 5,
+                  title: 'Make It Yours',
+                  description:
+                      'Customize sound, vibration, reminders and Mala size.',
+                  isLastStep: true,
+                  arrowDirection: ArrowDirection.topRight,
+                  onNext: () {
+                    ShowCaseWidget.of(context).dismiss();
+                    CompletionDialog.show(context, onDismiss: () {});
+                  },
+                  onSkip: () => _dismissTour(context),
+                ),
+                child: _buildIconButton(Icons.settings, _openSettings),
+              ),
             ],
           ),
         ],
@@ -490,9 +573,49 @@ class _NamJapScreenState extends State<NamJapScreen>
         const SizedBox(height: 80),
         _buildTitle(),
         const SizedBox(height: 60),
-        _buildProgressCircle(progress),
+
+        // Target 1: Japa Counter
+        Showcase.withWidget(
+          key: TourKeys.japaCounterKey,
+          targetShapeBorder: const CircleBorder(),
+          targetPadding: const EdgeInsets.all(6),
+          container: TourTooltip(
+            stepIndex: 0,
+            totalSteps: 5,
+            title: 'Begin Your Japa',
+            description: 'Tap anywhere to count each mantra repetition.',
+            arrowDirection: ArrowDirection.up,
+            onNext: () => ShowCaseWidget.of(context).next(),
+            onSkip: () => _dismissTour(context),
+          ),
+          child: _buildProgressCircle(progress),
+        ),
+
         const SizedBox(height: 50),
-        _buildMalaDisplay(),
+
+        // Target 2: Mala Progress
+        Showcase.withWidget(
+          key: TourKeys.malaProgressKey,
+          targetShapeBorder: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          targetPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 8,
+          ),
+          container: TourTooltip(
+            stepIndex: 1,
+            totalSteps: 5,
+            title: 'Complete Your Mala',
+            description:
+                'Your progress is tracked automatically as you practice.',
+            arrowDirection: ArrowDirection.down,
+            onNext: () => ShowCaseWidget.of(context).next(),
+            onSkip: () => _dismissTour(context),
+          ),
+          child: _buildMalaDisplay(),
+        ),
+
         const SizedBox(height: 40),
         _buildTapInstruction(),
       ],
@@ -580,7 +703,7 @@ class _NamJapScreenState extends State<NamJapScreen>
                 ),
               ),
               Text(
-                "/ $_malaSize", // Dynamically show selected mala size
+                "/ $_malaSize",
                 style: TextStyle(
                   fontSize: 18,
                   color: Colors.white.withOpacity(0.8),

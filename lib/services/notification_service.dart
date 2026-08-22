@@ -57,8 +57,6 @@ class NotificationService {
 
       await _notificationsPlugin.cancelAll();
 
-      final now = tz.TZDateTime.now(tz.local);
-
       List<TimeOfDay> times = [
         const TimeOfDay(hour: 8, minute: 0), // Morning
         const TimeOfDay(hour: 14, minute: 0), // Afternoon

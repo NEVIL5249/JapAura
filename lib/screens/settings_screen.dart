@@ -145,8 +145,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 16),
                   _buildMalaSizeTile(),
                   const SizedBox(height: 40),
-                  _buildSectionTitle('About'),
+                  _buildSectionTitle('Help & About'),
                   const SizedBox(height: 20),
+                  _buildInfoTile(
+                    icon: Icons.explore_outlined,
+                    title: 'App Tour',
+                    subtitle: 'Take the guided tour again',
+                    onTap: () {
+                      Navigator.pop(context, true);
+                    },
+                  ),
+                  const SizedBox(height: 16),
                   _buildInfoTile(
                     icon: Icons.info_outline,
                     title: 'App Version',
