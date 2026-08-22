@@ -301,11 +301,8 @@ class _NamJapScreenState extends State<NamJapScreen>
           await _saveSelectedMantra(mantra.id);
           await _loadData();
 
-          if (_isAudioEnabled && mantra.audioPath.isNotEmpty) {
-            await AudioService.playLoop(mantra.audioPath);
-          } else {
-            await AudioService.stop();
-          }
+          // Stop continuous background audio so sound only plays when user taps to count
+          await AudioService.stop();
 
           Navigator.pop(context);
         },

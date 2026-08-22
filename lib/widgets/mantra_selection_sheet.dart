@@ -107,14 +107,8 @@ class MantraSelectionSheet extends StatelessWidget {
             // Update selected mantra in parent
             onMantraSelected(mantra);
 
-            // Play mantra audio
-            if (AudioService.isPlaying) {
-              await AudioService.stop();
-            }
-            await AudioService.playLoop(mantra.audioPath);
-
-            // Close modal safely
-            // Navigator.pop(context);
+            // Stop continuous background audio so sound only plays on user tap
+            await AudioService.stop();
           },
           borderRadius: BorderRadius.circular(16),
           child: Container(
