@@ -16,7 +16,6 @@ import '../widgets/app_tour/tour_tooltip.dart';
 import '../services/audio_service.dart';
 import '../services/onboarding_service.dart';
 import 'settings_screen.dart';
-import 'onboarding/completion_screen.dart';
 
 class NamJapScreen extends StatefulWidget {
   final bool startTourOnLaunch;
@@ -548,10 +547,7 @@ class _NamJapScreenState extends State<NamJapScreen>
                       'Customize sound, vibration, reminders and Mala size.',
                   isLastStep: true,
                   arrowDirection: ArrowDirection.topRight,
-                  onNext: () {
-                    ShowCaseWidget.of(context).dismiss();
-                    CompletionDialog.show(context, onDismiss: () {});
-                  },
+                  onNext: () => _dismissTour(context),
                   onSkip: () => _dismissTour(context),
                 ),
                 child: _buildIconButton(Icons.settings, _openSettings),
