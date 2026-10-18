@@ -174,10 +174,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _buildInfoTile(
                     icon: Icons.feedback_outlined,
                     title: 'Send Feedback',
-                    subtitle: 'Help us improve the app',
-                    onTap: () {
-                      _showComingSoonDialog('Feedback');
-                    },
+                    subtitle: 'Send feedback about JapAura',
+                    onTap: _openFeedbackEmail,
                   ),
                   const SizedBox(height: 30),
                 ],
@@ -617,60 +615,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
-  void _showComingSoonDialog(String feature) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        backgroundColor: Colors.white,
-        title: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: primaryColor.shade100,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.hourglass_empty,
-                color: primaryColor.shade600,
-                size: 32,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Coming Soon',
-              style: TextStyle(
-                color: primaryColor.shade700,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        content: Text(
-          '$feature will be available in a future update!',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
-        ),
-        actions: [
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor.shade600,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text('Got it', style: TextStyle(fontSize: 16)),
-            ),
-          ),
-        ],
-      ),
+  Future<void> _openFeedbackEmail() async {
+    const body = '''Hi JapAura Team,
+
+I'd like to share some feedback about the JapAura app.
+
+Feedback:
+
+''';
+    final uri = Uri(
+      scheme: 'mailto',
+      path: 'nevilg8690@gmail.com',
+      query: _encodeEmailQuery({
+        'subject': 'JapAura App Feedback',
+        'body': body,
+      }),
     );
+    await launchUrl(uri);
+  }
+
+  String _encodeEmailQuery(Map<String, String> params) {
+    return params.entries
+        .map(
+          (entry) =>
+              '${Uri.encodeComponent(entry.key)}=${Uri.encodeComponent(entry.value)}',
+        )
+        .join('&');
   }
 }
