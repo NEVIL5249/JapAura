@@ -342,7 +342,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               color: secondaryColor.shade300.withOpacity(0.3),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.countertops, color: Colors.white, size: 24),
+            child: const Icon(Icons.all_inclusive, color: Colors.white, size: 24),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -436,7 +436,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
-                      Icons.countertops,
+                      Icons.all_inclusive,
                       color: primaryColor.shade600,
                       size: 20,
                     ),
