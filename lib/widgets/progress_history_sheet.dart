@@ -111,7 +111,7 @@ class ProgressHistorySheet extends StatelessWidget {
                     mantra.secondaryColor.shade500,
                   ],
                 ),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
                     color: mantra.primaryColor.withOpacity(0.3),

@@ -16,7 +16,7 @@ class NotificationService {
     tz.setLocalLocation(tz.getLocation(timeZoneName));
 
     const AndroidInitializationSettings androidInit =
-        AndroidInitializationSettings('app_icon');
+        AndroidInitializationSettings('ic_notification');
 
     final InitializationSettings settings = InitializationSettings(
       android: androidInit,
@@ -25,7 +25,26 @@ class NotificationService {
     await _notificationsPlugin.initialize(settings);
   }
 
-  /// Request notification permission (Android 13+)
+  static AndroidNotificationDetails _androidDetails({int? when}) {
+    return AndroidNotificationDetails(
+      'japaura_daily',
+      'Daily Reminders',
+      channelDescription: 'Daily mantra reminder notifications',
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: true,
+      enableVibration: true,
+      showWhen: true,
+      when: when,
+      fullScreenIntent: false,
+      category: AndroidNotificationCategory.reminder,
+      icon: 'ic_notification',
+      largeIcon: const DrawableResourceAndroidBitmap('app_icon'),
+      color: const Color(0xFFFF5C1D),
+    );
+  }
+
+  /// Request notification permission (Android 13+). Must run after an Activity exists.
   static Future<bool> requestPermissions() async {
     final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
         _notificationsPlugin
@@ -33,10 +52,22 @@ class NotificationService {
               AndroidFlutterLocalNotificationsPlugin
             >();
 
-    final bool? grantedNotificationPermission = await androidImplementation
-        ?.requestNotificationsPermission();
+    if (androidImplementation == null) {
+      return true;
+    }
 
-    return grantedNotificationPermission ?? false;
+    final alreadyEnabled =
+        await androidImplementation.areNotificationsEnabled();
+    if (alreadyEnabled != true) {
+      final granted = await androidImplementation
+          .requestNotificationsPermission();
+      if (granted != true) {
+        return false;
+      }
+    }
+
+    await androidImplementation.requestExactAlarmsPermission();
+    return true;
   }
 
   /// Schedule daily notifications (3 per day)
@@ -114,32 +145,34 @@ class NotificationService {
         final randomMessage = msgList[random.nextInt(msgList.length)];
         final scheduledTime = _nextInstanceOfTime(times[i]);
 
-        await _notificationsPlugin.zonedSchedule(
-          i, // unique ID for each notification
-          "Japaura Reminder ⏰",
-          randomMessage,
-          scheduledTime,
-          NotificationDetails(
-            android: AndroidNotificationDetails(
-              'japaura_daily',
-              'Daily Reminders',
-              channelDescription: 'Daily mantra reminder notifications',
-              importance: Importance.max,
-              priority: Priority.high,
-              playSound: true,
-              enableVibration: true,
-              showWhen: true,
-              when: scheduledTime.millisecondsSinceEpoch,
-              fullScreenIntent: false,
-              category: AndroidNotificationCategory.reminder,
-              icon: 'app_icon',
-              largeIcon: const DrawableResourceAndroidBitmap('app_icon'),
-              color: const Color(0xFFFF5C1D),
-            ),
+        final details = NotificationDetails(
+          android: _androidDetails(
+            when: scheduledTime.millisecondsSinceEpoch,
           ),
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          matchDateTimeComponents: DateTimeComponents.time,
         );
+
+        try {
+          await _notificationsPlugin.zonedSchedule(
+            i,
+            'Japaura Reminder',
+            randomMessage,
+            scheduledTime,
+            details,
+            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+            matchDateTimeComponents: DateTimeComponents.time,
+          );
+        } catch (e) {
+          debugPrint('Exact alarm failed, falling back to inexact: $e');
+          await _notificationsPlugin.zonedSchedule(
+            i,
+            'Japaura Reminder',
+            randomMessage,
+            scheduledTime,
+            details,
+            androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+            matchDateTimeComponents: DateTimeComponents.time,
+          );
+        }
       }
     } catch (e) {
       rethrow;

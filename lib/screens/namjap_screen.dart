@@ -14,6 +14,7 @@ import '../widgets/circular_progress_painter.dart';
 import '../widgets/app_tour/tour_keys.dart';
 import '../widgets/app_tour/tour_tooltip.dart';
 import '../services/audio_service.dart';
+import '../services/notification_service.dart';
 import '../services/onboarding_service.dart';
 import 'settings_screen.dart';
 
@@ -58,11 +59,12 @@ class _NamJapScreenState extends State<NamJapScreen>
     _loadData();
     _loadSettings();
 
-    if (widget.startTourOnLaunch) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initNotifications();
+      if (widget.startTourOnLaunch) {
         ShowCaseWidget.of(context).startShowCase(TourKeys.allKeys);
-      });
-    }
+      }
+    });
   }
 
   void _initAnimations() {
@@ -83,6 +85,12 @@ class _NamJapScreenState extends State<NamJapScreen>
     _malaAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
       CurvedAnimation(parent: _malaController, curve: Curves.elasticOut),
     );
+  }
+
+  Future<void> _initNotifications() async {
+    final prefs = await SharedPreferences.getInstance();
+    final enabled = prefs.getBool('notification_enabled') ?? true;
+    await NotificationService.scheduleDailyNotifications(enabled: enabled);
   }
 
   Future<void> _loadSettings() async {
@@ -224,63 +232,55 @@ class _NamJapScreenState extends State<NamJapScreen>
   void _showMalaCompleteDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         backgroundColor: Colors.white,
-        title: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: selectedMantra.primaryColor.shade100,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.celebration,
-                color: selectedMantra.primaryColor.shade600,
-                size: 32,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Mala Complete!',
-              style: TextStyle(
-                color: selectedMantra.primaryColor.shade700,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Congratulations!', style: TextStyle(fontSize: 18)),
-            const SizedBox(height: 8),
-            Text(
-              'You have completed $mala mala(s) of ${selectedMantra.name} today!',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
-            ),
-          ],
-        ),
-        actions: [
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: selectedMantra.primaryColor.shade600,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: selectedMantra.primaryColor.shade100,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.celebration,
+                  color: selectedMantra.primaryColor.shade600,
+                  size: 32,
                 ),
               ),
-              child: const Text('Continue', style: TextStyle(fontSize: 16)),
-            ),
+              const SizedBox(height: 12),
+              Text(
+                'Mala Complete!',
+                style: TextStyle(
+                  color: selectedMantra.primaryColor.shade700,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text('Congratulations!', style: TextStyle(fontSize: 18)),
+              const SizedBox(height: 8),
+              Text(
+                'You have completed $mala mala(s) of ${selectedMantra.name} today!',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: _themedDialogButton(
+                  label: 'Continue',
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -312,47 +312,138 @@ class _NamJapScreenState extends State<NamJapScreen>
   void _reset() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Icon(Icons.refresh, color: selectedMantra.primaryColor.shade600),
-            const SizedBox(width: 8),
-            const Text('Reset Progress?'),
-          ],
-        ),
-        content: Text(
-          'This will reset today\'s count and mala progress for ${selectedMantra.name}. Are you sure?',
-          style: TextStyle(color: Colors.grey.shade600),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: Colors.grey.shade600),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                count = 0;
-                mala = 0;
-                todayTotalCount = 0;
-              });
-              _saveData();
-              Navigator.of(context).pop();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: selectedMantra.primaryColor.shade600,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: selectedMantra.primaryColor.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.refresh,
+                      color: selectedMantra.primaryColor.shade600,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Reset Progress?',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: selectedMantra.primaryColor.shade700,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            child: const Text('Reset'),
+              const SizedBox(height: 16),
+              Text(
+                'This will reset today\'s count and mala progress for ${selectedMantra.name}. Are you sure?',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey.shade600,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: _themedDialogButton(
+                        label: 'Cancel',
+                        outlined: true,
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: _themedDialogButton(
+                        label: 'Reset',
+                        onPressed: () {
+                          setState(() {
+                            count = 0;
+                            mala = 0;
+                            todayTotalCount = 0;
+                          });
+                          _saveData();
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _themedDialogButton({
+    required String label,
+    required VoidCallback onPressed,
+    bool outlined = false,
+  }) {
+    final radius = BorderRadius.circular(12);
+    if (outlined) {
+      return OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: selectedMantra.primaryColor.shade700,
+          side: BorderSide(color: selectedMantra.primaryColor.shade200),
+          shape: RoundedRectangleBorder(borderRadius: radius),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+      );
+    }
+
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        padding: EdgeInsets.zero,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        shadowColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: radius),
+      ),
+      child: Ink(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              selectedMantra.primaryColor.shade500,
+              selectedMantra.secondaryColor.shade500,
+            ],
+          ),
+          borderRadius: radius,
+        ),
+        child: Container(
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
       ),
     );
   }

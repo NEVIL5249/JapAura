@@ -5,24 +5,13 @@
 // import 'package:intl/intl.dart';
 // import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'app.dart'; // Your main App widget
 import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize notifications
   await NotificationService.initialize();
-
-  // Load saved user preference for notifications
-  final prefs = await SharedPreferences.getInstance();
-  final notificationsEnabled = prefs.getBool('notification_enabled') ?? true;
-
-  // Re-schedule notifications on app start if enabled
-  await NotificationService.scheduleDailyNotifications(
-    enabled: notificationsEnabled,
-  );
 
   runApp(const NamJapApp());
 }
