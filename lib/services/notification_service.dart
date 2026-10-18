@@ -16,7 +16,7 @@ class NotificationService {
     tz.setLocalLocation(tz.getLocation(timeZoneName));
 
     const AndroidInitializationSettings androidInit =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('app_icon');
 
     final InitializationSettings settings = InitializationSettings(
       android: androidInit,
@@ -132,6 +132,9 @@ class NotificationService {
               when: scheduledTime.millisecondsSinceEpoch,
               fullScreenIntent: false,
               category: AndroidNotificationCategory.reminder,
+              icon: 'app_icon',
+              largeIcon: const DrawableResourceAndroidBitmap('app_icon'),
+              color: const Color(0xFFFF5C1D),
             ),
           ),
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
