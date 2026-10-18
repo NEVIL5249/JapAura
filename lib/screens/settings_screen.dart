@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/notification_service.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -167,9 +168,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     icon: Icons.privacy_tip_outlined,
                     title: 'Privacy Policy',
                     subtitle: 'How we protect your data',
-                    onTap: () {
-                      _showComingSoonDialog('Privacy Policy');
-                    },
+                    onTap: _openPrivacyPolicy,
                   ),
                   const SizedBox(height: 16),
                   _buildInfoTile(
@@ -611,6 +610,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _openPrivacyPolicy() async {
+    final uri = Uri.parse('https://japaura.nevilgadhia.in/privacy-policy');
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   void _showComingSoonDialog(String feature) {
