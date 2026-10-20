@@ -24,13 +24,13 @@ dependencies:
   fl_chart: ^1.1.0
   showcaseview: ^5.1.0
   url_launcher: ^6.3.2
+  flutter_native_splash: ^2.4.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
   flutter_launcher_icons: ^0.13.1   # Added for app logo
-  flutter_native_splash: ^2.3.2
 
 flutter:
   uses-material-design: true
@@ -63,7 +63,11 @@ flutter_launcher_icons:
   adaptive_icon_foreground: "assets/logo.png"
 
 flutter_native_splash:
-  color: "#FF5C1D"   # your app’s primary color
-  image: assets/images/japaura_logo.png   # your app logo
+  color: "#FF5C1D"
+  image: assets/images/japaura_splash.png
   android: true
   ios: true
+  android_12:
+    color: "#FF5C1D"
+    image: assets/images/japaura_splash.png
+    icon_background_color: "#FF5C1D"
